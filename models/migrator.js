@@ -10,7 +10,7 @@ const defaultMigrationOptions = {
   migrationsTable: "pgmigrations",
 };
 
-async function listPendingMigrations(request, response) {
+async function listPendingMigrations() {
   let dbClient;
   try {
     dbClient = await database.getNewClient();
