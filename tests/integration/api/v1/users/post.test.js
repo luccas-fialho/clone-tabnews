@@ -1,4 +1,6 @@
 import orchestrator from "tests/orchestrator.js";
+import user from "models/user.js";
+import password from "models/password.js";
 import { version as uuidVersion } from "uuid";
 
 beforeAll(async () => {
@@ -18,7 +20,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "luccky",
           email: "luccky@email.com",
-          password: "senha123",
+          password: "password123",
         }),
       });
 
@@ -30,7 +32,7 @@ describe("POST /api/v1/users", () => {
         id: responseBody.id,
         username: "luccky",
         email: "luccky@email.com",
-        password: "senha123",
+        password: responseBody.password,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -38,6 +40,20 @@ describe("POST /api/v1/users", () => {
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
+
+      const userInDatabase = await user.findOneByUsername("luccky");
+      const correctPasswordMatch = await password.compare(
+        "password123",
+        userInDatabase.password,
+      );
+
+      const incorrectPasswordMatch = await password.compare(
+        "WrongPassword",
+        userInDatabase.password,
+      );
+
+      expect(correctPasswordMatch).toBe(true);
+      expect(incorrectPasswordMatch).toBe(false);
     });
 
     test("With duplicated 'email'", async () => {
@@ -74,7 +90,7 @@ describe("POST /api/v1/users", () => {
       expect(response2Body).toEqual({
         name: "ValidationError",
         message: "This email is already being used.",
-        action: "Use another email to sign up",
+        action: "Use another email to make this operation.",
         status_code: 400,
       });
     });
@@ -113,7 +129,7 @@ describe("POST /api/v1/users", () => {
       expect(response2Body).toEqual({
         name: "ValidationError",
         message: "This username is already being used.",
-        action: "Use another username to sign up",
+        action: "Use another username to make this operation.",
         status_code: 400,
       });
     });
